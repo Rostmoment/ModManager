@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "XmmUforlzw1Cyl0VHE68MpdGhAWggajGV20qGeOx8SVzA1ZTocXYmtDbH6+t9BqHStsx4a5PKCzwXejqVR9kvA==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\vinni\\OneDrive\\Pulpit\\BBCR 2.0 и BBE\\ModManager\\ModManager\\ModManager.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\vinni\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",
+    "C:\\Users\\vinni\\.nuget\\packages\\netstandard.library\\2.0.3\\netstandard.library.2.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}
