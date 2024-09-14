@@ -30,7 +30,7 @@ namespace ModManager
             {
                 if (name.ToLower().EndsWith(ModInfo.dllEnabled) || name.ToLower().EndsWith(ModInfo.dllDisabled)) new ModInfo(Path.GetFileName(name));
             }
-            CustomOptionsCore.CreateApplyButton(optionsMenu, "Apply changes", () => mods.Do(x => x.ChangeState())).transform.SetParent(category.transform, false);
+            CustomOptionsCore.CreateApplyButton(optionsMenu, "Apply changes", () => { mods.Do(x => x.ChangeState()); Application.Quit(); }).transform.SetParent(category.transform, false);
             previousButton = BasePlugin.CreateButtonWithSprite("PreviousButton", BasePlugin.LoadAsset<Sprite>("MenuArrowSheet_2"), BasePlugin.LoadAsset<Sprite>("MenuArrowSheet_0"), category.transform, new Vector3(-150, 30));
             previousButton.OnPress = new UnityEngine.Events.UnityEvent();
             previousButton.OnPress.AddListener(() => ChangeMod(false));
