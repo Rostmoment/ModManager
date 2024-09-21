@@ -16,17 +16,29 @@ namespace ModManager
          -50
          -80
         */
-        private static string pdbEnanled = ".pdb";
-        private static string pdbDisabled = ".pdbdisabled";
         private static string[] exceptions = new string[7];
-        private string name;
         private string fileName;
         private MenuToggle pdbButton = null;
         private MenuToggle mainButton;
 
-        public static string dllEnabled = ".dll";
-        public static string dllDisabled = ".disable";
-        public static string PluginsPath = Path.Combine(Application.dataPath.Remove(Application.dataPath.Length - 11, 11), "BepInEx", "plugins") + "\\";
+        public bool IsException => exceptions.Contains(name);
+        public bool Value
+        {
+            get
+            {
+                return mainButton.Value;
+            }
+            set
+            {
+                mainButton.Set(value);
+            }
+        }
+        public string name;
+        public static string pdbDisabled => ".pdbdisabled";
+        public static string pdbEnanled => ".pdb";
+        public static string dllEnabled => ".dll";
+        public static string dllDisabled => ".disable";
+        public static string PluginsPath => Path.Combine(Application.dataPath.Remove(Application.dataPath.Length - 11, 11), "BepInEx", "plugins") + "\\";
         public static ModManager modManager;
         public static OptionsMenu menu;
         public static GameObject category;
@@ -128,13 +140,13 @@ namespace ModManager
         public ModInfo(string file) 
         {
             fileName = file;
-            name = Path.GetFileNameWithoutExtension(file);
+            name = RemoveFileExtension(file);
             Vector2 pos = new Vector2(20, -50);
-            if (PDBExists(name))
+            /*if (PDBExists(name))
             {
                 pdbButton = CustomOptionsCore.CreateToggleButton(menu, new Vector2(140, -50), ".pdb file", GetPDBState(name), "If .pdb file is active there will be more detail about error in logs\nLike line of  code, file path, etc");
                 pos = new Vector2(-98, -50);
-            }
+            }*/
             try
             {
                 mainButton = CustomOptionsCore.CreateToggleButton(menu, pos, "Active", GetDLLState(name), "Is mod active");
@@ -148,6 +160,12 @@ namespace ModManager
             if (pdbButton != null) pdbButton.transform.SetParent(category.transform, false);
             mainButton.transform.SetParent(category.transform, false);
             modManager.mods.Add(this);
+        }
+        private static string RemoveFileExtension(string filePath)
+        {
+            string directoryPath = Path.GetDirectoryName(filePath);
+            string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
+            return Path.Combine(directoryPath, fileNameWithoutExtension);
         }
     }
 }

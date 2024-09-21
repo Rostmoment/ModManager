@@ -2,6 +2,7 @@
 using HarmonyLib;
 using MTM101BaldAPI;
 using MTM101BaldAPI.OptionsAPI;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -11,11 +12,27 @@ using UnityEngine.UI;
 
 namespace ModManager
 {
-    [BepInPlugin("rost.moment.baldiplus.modmanager", "Mods Manager", "2.0")]
+    [BepInPlugin("rost.moment.baldiplus.modmanager", "Mods Manager", "2.1")]
     [BepInDependency("mtm101.rulerp.bbplus.baldidevapi", BepInDependency.DependencyFlags.HardDependency)]
     public class BasePlugin : BaseUnityPlugin
     {
         public static BasePlugin Instance;
+        public static string[] Split(string input, char delimiter) // For some reason string.split doesnt work
+        {
+            List<string> substrings = new List<string>();
+            string current = "";
+            foreach (char c in input)
+            {
+                if (c == delimiter)
+                {
+                    substrings.Add(current);
+                    current = "";
+                }
+                else current += c;
+            }
+            if (current != "") substrings.Add(current);
+            return substrings.ToArray(); 
+        }
         private void OnMenu(OptionsMenu menu)
         {
             GameObject category = CustomOptionsCore.CreateNewCategory(menu, "Mods\nManager");
@@ -36,7 +53,6 @@ namespace ModManager
         }
         public static void UseCmd(string command)
         {
-            UnityEngine.Debug.Log(command);
             ProcessStartInfo processInfo = new ProcessStartInfo("cmd.exe", "/c " + command)
             {
                 CreateNoWindow = true,
@@ -60,7 +76,7 @@ namespace ModManager
             UnityEngine.Debug.Log($"ExitCode: {process.ExitCode}");
             process.Close();
         }
-        public static void RenameFiles(string fullPath, string newName) => UseCmd("rename \"" + fullPath + "\" \"" + newName + "\"");
+        public static void RenameFiles(string fullPath, string newName) => UseCmd("rename \"" + fullPath + "\" \"" + Path.GetFileName(newName) + "\"");
         public static T LoadAsset<T>(string name) where T : Object
         {
             return (from x in Resources.FindObjectsOfTypeAll<T>()

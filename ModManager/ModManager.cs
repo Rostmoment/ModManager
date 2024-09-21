@@ -11,9 +11,11 @@ namespace ModManager
 {
     public class ModManager : MonoBehaviour
     {
+        private ModInfo current;
         private int index = 0;
         private StandardMenuButton previousButton;
         private StandardMenuButton nextButton;
+        public StandardMenuButton upatchButton;
         public static OptionsMenu optionsMenu;
         public static GameObject category;
         public TextLocalizer modName;
@@ -26,11 +28,20 @@ namespace ModManager
             ModInfo.menu = optionsMenu;
             ModInfo.category = category;
             ModInfo.modManager = this;
-            foreach (string name in Directory.GetFiles(ModInfo.PluginsPath))
+            string[] files = new string[] { }.AddRangeToArray(Directory.GetFiles(ModInfo.PluginsPath, "*.disable", SearchOption.AllDirectories)).AddRangeToArray(Directory.GetFiles(ModInfo.PluginsPath, "*dll", SearchOption.AllDirectories));
+            foreach (string name in files)
             {
-                if (name.ToLower().EndsWith(ModInfo.dllEnabled) || name.ToLower().EndsWith(ModInfo.dllDisabled)) new ModInfo(Path.GetFileName(name));
+                if (name.ToLower().EndsWith(ModInfo.dllEnabled) || name.ToLower().EndsWith(ModInfo.dllDisabled)) new ModInfo(name.Replace(ModInfo.PluginsPath, ""));
             }
             CustomOptionsCore.CreateApplyButton(optionsMenu, "Apply changes", () => { mods.Do(x => x.ChangeState()); Application.Quit(); }).transform.SetParent(category.transform, false);
+            upatchButton = CustomOptionsCore.CreateTextButton(optionsMenu, new Vector2(-20, -160), "Unpatch", "Disables patches of mod, but not disables mod, applied patches won't disabled\n<color=red>VERY BUGGY, CAN BROKE GAME</color>", () =>
+            {
+                if (current.PluginInfo != null && !current.IsException)
+                {
+                    Harmony.UnpatchID(current.PluginInfo.Metadata.GUID);
+                }
+            });
+            upatchButton.transform.SetParent(category.transform, false);
             previousButton = BasePlugin.CreateButtonWithSprite("PreviousButton", BasePlugin.LoadAsset<Sprite>("MenuArrowSheet_2"), BasePlugin.LoadAsset<Sprite>("MenuArrowSheet_0"), category.transform, new Vector3(-150, 30));
             previousButton.OnPress = new UnityEngine.Events.UnityEvent();
             previousButton.OnPress.AddListener(() => ChangeMod(false));
@@ -47,6 +58,7 @@ namespace ModManager
             modInfo.textBox.fontSize = 20;
             mods.Do(x => x.SetActive(false));
             mods.First().SetActive(true);
+            mods.Where(x => !ModInfo.GetPDBState(x.name) && ModInfo.PDBExists(x.name)).Do(x => BasePlugin.RenameFiles(x.pdbPath, Path.GetFileNameWithoutExtension(x.pdbPath) + ModInfo.pdbEnanled));
         }
         void Update()
         {
@@ -58,7 +70,33 @@ namespace ModManager
             }
             if (CheckForHotKey(KeyCode.C))
             {
-
+                string res = "";
+                foreach (ModInfo mod in mods)
+                {
+                    res += mod.name + "/" + mod.Value.ToString() + "\n";
+                }
+                res = res.Substring(0, res.Length - 1);
+                GUIUtility.systemCopyBuffer = res;
+            }
+            if (CheckForHotKey(KeyCode.V))
+            {
+                string res = GUIUtility.systemCopyBuffer;
+                foreach (string l in BasePlugin.Split(res, '\n'))
+                {
+                    string[] d = BasePlugin.Split(l, '/');
+                    mods.Where(x => x.name == d[0] && !x.IsException).Do(x => x.Value = bool.Parse(d[1]));
+                }
+            }
+            if (CheckForHotKey(KeyCode.M) && current.PluginInfo != null)
+            {
+                GUIUtility.systemCopyBuffer = "GUID: " + current.PluginInfo.Metadata.GUID + "\nVersion: " + current.PluginInfo.Metadata.Version + "\nName: " + current.PluginInfo.Metadata.Name;
+            }
+            if (CheckForHotKey(KeyCode.D)) mods.Where(x => !x.IsException).Do(x => x.Value = false);
+            if (CheckForHotKey(KeyCode.E)) mods.Do(x => x.Value = true);
+            if (CheckForHotKey(KeyCode.S)) 
+            { 
+                mods.Do(x => x.ChangeState()); 
+                Application.Quit(); 
             }
         }
         private void ChangeMod(bool state)
@@ -71,6 +109,9 @@ namespace ModManager
             {
                 mods[i].SetActive(i == index);
             }
+            current = mods[index];
+            upatchButton.gameObject.SetActive(current.Value);
+            if (current.IsException || current.PluginInfo == null) upatchButton.gameObject.SetActive(false);
         }
     }
 }
